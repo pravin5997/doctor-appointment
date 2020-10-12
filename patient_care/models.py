@@ -2,28 +2,36 @@ from django.db import models
 from django.contrib.auth.models import (AbstractBaseUser)
 from .managers import UserManager
 from django.db.models.signals import post_save
+from django.db.models.signals import pre_save
 import signal
 
-class Patient(AbstractBaseUser):
+class User(AbstractBaseUser):
+    USER_TYPE = (
+        ('P', "Patient"),
+        ('D', "Doctor")
+        )
+
+    first_name = models.CharField(max_length=55)
+    last_name = models.CharField(max_length=55)
     email = models.EmailField(
         verbose_name='email',
         max_length=255,
         unique=True,
     )
-    username = models.CharField(max_length=55,unique=True)
     mobile = models.CharField(max_length=15)
     referral_code = models.IntegerField(null=True, blank=True)
-    is_active = models.BooleanField(default=True)
+    user_type = models.CharField(max_length=1, choices=USER_TYPE)
+    is_active = models.BooleanField(default=False)
     is_admin = models.BooleanField(default=False)
 
 
     objects = UserManager()
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['mobile','username',"referral_code"]
+    REQUIRED_FIELDS = ["first_name", "last_name", "mobile","user_type", "referral_code"]
 
     def __str__(self):
-        return self.email
+        return "{} - {}".format(self.user_type, self.email)
 
     def has_perm(self, perm, obj=None):
         return True
@@ -46,7 +54,7 @@ class PatientProfile(models.Model):
             ("Plastic", "Plastic Surgery"),
             ("Neuro", "Neurosurgery"),   
     )
-    patient = models.OneToOneField(Patient, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="patient_profile")
     birth_date = models.DateField()
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES)
     height = models.FloatField()
@@ -64,10 +72,10 @@ class PatientProfile(models.Model):
     prior_surgeries_type = models.CharField(max_length=8, choices=SURGERY_TYPE)
     prior_surgeries_year = models.IntegerField()
     allergies = models.CharField(max_length=50)
-    report = models.ImageField(upload_to='patient/', blank= True, null = True)
-    
+    report = models.ImageField(upload_to='patient/', blank=True, null=True)
 
-class Doctor(models.Model):
+
+class DoctorProfile(models.Model):
     SPECIALIZATION_TYPE = (
             ("Cardiologist" , "Cardiologist"),
             ("Endocrinologists", "Endocrinologists"),
@@ -78,8 +86,7 @@ class Doctor(models.Model):
             ("G", "Gujarati"),
             ("H", "Hindi"),
         )
-
-    name = models.CharField(max_length=55)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="doctor_profile")
     photo = models.ImageField(upload_to="doctor/")
     hospital = models.CharField(max_length=55)
     specialization = models.CharField(max_length=18, choices=SPECIALIZATION_TYPE)
@@ -87,9 +94,10 @@ class Doctor(models.Model):
     degree = models.CharField(max_length=50)
     language = models.CharField(max_length=1, choices=LANGUAGE)
     location = models.CharField(max_length=50)
- 
+
     def __str__(self):
-        return self.name
+        return self.user.first_name 
+    
 
 class BookDoctor(models.Model):
     AVAILABILITY_TYPE = (
@@ -100,8 +108,8 @@ class BookDoctor(models.Model):
         ("Emergency", "Emergency"),
         ("Regular", "Regular"),
     )
-    patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name="booking_patient")
-    doctor = models.ForeignKey(Doctor, related_name="booking_doctor", on_delete=models.CASCADE)
+    patient = models.ForeignKey(User, on_delete=models.CASCADE, related_name="booking_patient")
+    doctor = models.ForeignKey(User, related_name="booking_doctor", on_delete=models.CASCADE)
     doctor_is_preferred = models.BooleanField(default=False)
     availabilty_type = models.CharField(max_length=15, choices=AVAILABILITY_TYPE)
     person_consultation_type = models.CharField(max_length=10, choices=CONSULTATION_TPYE)
@@ -109,7 +117,7 @@ class BookDoctor(models.Model):
     ambulance = models.BooleanField(default=False)
 
     def __str__(self):
-        return "doctor - {}".format(self.doctor.name)
+        return "patient is {} - doctor is {}".format(self.patient.first_name,self.doctor.first_name)
   
 
 class SearchAttribute(models.Model):

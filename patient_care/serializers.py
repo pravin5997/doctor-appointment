@@ -1,12 +1,13 @@
-from .models import Patient, PatientProfile, Doctor, SearchAttribute, BookDoctor, ConformBooking
+from .models import User, PatientProfile, DoctorProfile, SearchAttribute, BookDoctor, ConformBooking
 from rest_framework import serializers
+from rest_framework.fields import CurrentUserDefault
 
-class PatientSerializer(serializers.ModelSerializer):
+class SignupSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
     
     class Meta:
-        model = Patient
-        fields = ('id','email', 'username', 'referral_code', "mobile", "password")
+        model = User
+        fields = ('id', "first_name", "last_name",'email', "user_type", 'referral_code', "mobile", "password")
 
     def create(self, validated_data):
         user = super().create(validated_data)
@@ -14,21 +15,25 @@ class PatientSerializer(serializers.ModelSerializer):
         user.save()
         return user
 
+
 class LoginSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Patient
+        model = User
         fields = ("email", "password",)
 
-    
+
 class PatientProfileSerializer(serializers.ModelSerializer):
+    
     class Meta:
         model = PatientProfile
         fields = "__all__"
 
+
 class DoctorSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Doctor
-        fields = "__all__"
+        model = DoctorProfile
+        fields = "__all__"     
+        
 
 class AttributeSerializer(serializers.ModelSerializer):
     class Meta:
