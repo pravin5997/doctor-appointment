@@ -27,12 +27,14 @@ class PatientProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = PatientProfile
         fields = "__all__"
+        read_only_fields = ("user",)
 
 
 class DoctorSerializer(serializers.ModelSerializer):
     class Meta:
         model = DoctorProfile
-        fields = "__all__"     
+        fields = "__all__"
+        read_only_fields = ("user",)
         
 
 class AttributeSerializer(serializers.ModelSerializer):

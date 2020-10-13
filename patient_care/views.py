@@ -8,13 +8,13 @@ from rest_framework import status, viewsets
 from .models import User,PatientProfile, DoctorProfile, SearchAttribute, BookDoctor, ConformBooking
 from django.contrib.auth import authenticate, login
 from django.db.models import Q
-from rest_framework.permissions import IsAuthenticated
 from django.core.mail import EmailMessage, send_mail
 from django.conf import settings
 from django.contrib.auth.tokens import default_token_generator
 from django.contrib.sites.shortcuts import get_current_site
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes
+from rest_framework.permissions import IsAuthenticated
 
 
 
@@ -73,10 +73,25 @@ class PatientProfileView(viewsets.ModelViewSet):
     queryset = PatientProfile.objects.all()
     serializer_class = PatientProfileSerializer
 
+    def create(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid():
+            serializer.save(user = request.user)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class DoctorProfileView(viewsets.ModelViewSet):
     queryset = DoctorProfile.objects.all()
     serializer_class = DoctorSerializer
+    permission_classes = [IsAuthenticated]
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid():
+            serializer.save(user = request.user)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class SearchAttributeList(ListCreateAPIView):
