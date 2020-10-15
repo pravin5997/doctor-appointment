@@ -4,10 +4,11 @@ from rest_framework.fields import CurrentUserDefault
 
 class SignupSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
-    
+
     class Meta:
         model = User
-        fields = ('id', "first_name", "last_name",'email', "user_type", 'referral_code', "mobile", "password")
+        fields = ('id', "first_name", "last_name", 'email', "user_type", 'referral_code', "mobile", "password", "universal_id")
+        read_only_fields = ("universal_id",)
 
     def create(self, validated_data):
         user = super().create(validated_data)
@@ -23,25 +24,24 @@ class LoginSerializer(serializers.ModelSerializer):
 
 
 class PatientProfileSerializer(serializers.ModelSerializer):
-    
+    first_name = serializers.CharField(source="user.first_name")
+    last_name = serializers.CharField(source="user.last_name")
+    mobile = serializers.CharField(source="user.mobile")
+   
     class Meta:
         model = PatientProfile
-        fields = "__all__"
-        read_only_fields = ("user",)
+        exclude = ("user",)
 
 
 class DoctorSerializer(serializers.ModelSerializer):
+    first_name = serializers.CharField(source="user.first_name")
+    last_name = serializers.CharField(source="user.last_name")
+    mobile = serializers.CharField(source="user.mobile")
+    
     class Meta:
         model = DoctorProfile
-        fields = "__all__"
-        read_only_fields = ("user",)
+        exclude = ("user",)
         
-
-class AttributeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = SearchAttribute
-        fields = "__all__"
-
 
 class DoctorBookSerializer(serializers.ModelSerializer):
     class Meta:
