@@ -129,7 +129,7 @@ class BookDoctor(models.Model):
         return "patient is {} - doctor is {}".format(self.patient.first_name,self.doctor.first_name)
 
 
-class ConformBooking(models.Model):
+class ConfirmBooking(models.Model):
     book = models.ForeignKey(BookDoctor, related_name="conform_booking", on_delete=models.CASCADE)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     date_time = models.DateTimeField(auto_now=True)

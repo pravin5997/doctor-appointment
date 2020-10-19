@@ -5,7 +5,7 @@ from rest_framework.generics import ListCreateAPIView,RetrieveUpdateDestroyAPIVi
 from rest_framework.views import APIView
 from .serializers import UserSerializer, PatientProfileSerializer, DoctorSerializer, DoctorBookSerializer, LoginSerializer, ConformBookingSerializer
 from rest_framework import status, viewsets
-from .models import User,PatientProfile, DoctorProfile, BookDoctor, ConformBooking
+from .models import User,PatientProfile, DoctorProfile, BookDoctor, ConfirmBooking
 from django.contrib.auth import authenticate, login
 from django.db.models import Q
 from django.core.mail import EmailMessage, send_mail
@@ -53,7 +53,6 @@ class EmailVerification(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request, uidb64, token, format=None):
-     
         uid = urlsafe_base64_decode(uidb64).decode()
         user = User.objects.get(pk=uid)
         token = Token.objects.get(user=user)
@@ -99,7 +98,6 @@ class DoctorProfileView(viewsets.ModelViewSet):
     queryset = DoctorProfile.objects.all()
     serializer_class = DoctorSerializer
    
-
     def create(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
@@ -129,5 +127,5 @@ class DoctorBook(ListCreateAPIView):
 
 
 class ConformBookingDoctor(ListCreateAPIView):
-    queryset = ConformBooking.objects.all()
+    queryset = ConfirmBooking.objects.all()
     serializer_class = ConformBookingSerializer

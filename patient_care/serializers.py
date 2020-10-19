@@ -1,4 +1,4 @@
-from .models import User, PatientProfile, DoctorProfile, BookDoctor, ConformBooking
+from .models import User, PatientProfile, DoctorProfile, BookDoctor, ConfirmBooking
 from rest_framework import serializers
 from rest_framework.fields import CurrentUserDefault
 
@@ -51,5 +51,5 @@ class DoctorBookSerializer(serializers.ModelSerializer):
 
 class ConformBookingSerializer(serializers.ModelSerializer):
     class Meta:
-        model = ConformBooking
+        model = ConfirmBooking
         fields = "__all__"
