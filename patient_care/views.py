@@ -3,9 +3,9 @@ from django.http import HttpResponse, JsonResponse
 from rest_framework.response import Response
 from rest_framework.generics import ListCreateAPIView,RetrieveUpdateDestroyAPIView, CreateAPIView, RetrieveAPIView, ListAPIView
 from rest_framework.views import APIView
-from .serializers import SignupSerializer, PatientProfileSerializer, DoctorSerializer, DoctorBookSerializer, LoginSerializer, ConformBookingSerializer
+from .serializers import UserSerializer, PatientProfileSerializer, DoctorSerializer, DoctorBookSerializer, LoginSerializer, ConformBookingSerializer
 from rest_framework import status, viewsets
-from .models import User,PatientProfile, DoctorProfile, SearchAttribute, BookDoctor, ConformBooking
+from .models import User,PatientProfile, DoctorProfile, BookDoctor, ConformBooking
 from django.contrib.auth import authenticate, login
 from django.db.models import Q
 from django.core.mail import EmailMessage, send_mail
@@ -22,15 +22,15 @@ from rest_framework.authentication import TokenAuthentication
 def home(request):
     return HttpResponse("welcome to new project start")
 
-
-class Register(APIView):
-    serializer_class = SignupSerializer
+class UserView(ListAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
     permission_classes = [AllowAny]
 
-    def get(self, request, format=None):
-        obj = User.objects.all()
-        serializer = self.serializer_class(obj, many = True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+
+class Register(APIView):
+    serializer_class = UserSerializer
+    permission_classes = [AllowAny]
 
     def post(self, request, format=None):
         serializer = self.serializer_class(data = request.data)
@@ -50,7 +50,7 @@ class Register(APIView):
 
 
 class EmailVerification(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def get(self, request, uidb64, token, format=None):
      
@@ -60,9 +60,8 @@ class EmailVerification(APIView):
         if user is not None and token:
             user.is_active = True
             user.save()
-            opc_id = str(1000+ user.id)
             email = EmailMessage("success message",
-                "Congratulations your email verification has been successfully completed.your opc id is "+opc_id+", click here to login, http://127.0.0.1:8000/login/",settings.EMAIL_HOST_USER, to=[user.email]
+                "Congratulations your email verification has been successfully completed.your upc id is "+user.universal_id+", click here to login, http://127.0.0.1:8000/login/",settings.EMAIL_HOST_USER, to=[user.email]
             )
             email.send(fail_silently=False)
             return Response({"Success": "Congratulations your email verification has been successfully"},status=status.HTTP_201_CREATED)
@@ -90,7 +89,6 @@ class PatientProfileView(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data)
-        
         if serializer.is_valid():
             serializer.save(user = request.user)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -112,12 +110,16 @@ class DoctorProfileView(viewsets.ModelViewSet):
 
 class SearchDoctor(APIView):
 
-    def get(self, request, search, format=None):
-        
-        user_obj = User.objects.filter(Q(first_name__icontains=search) | Q(last_name__icontains=search))
-        obj = DoctorProfile.objects.filter(Q(user__in=user_obj) | Q(location__icontains=search) | Q(hospital__icontains=search) |Q(specialization__icontains=search))
-        obj.order_by("location", "experience")
-        serializer = DoctorSerializer(obj, many = True)
+    def get(self, request, search, search1=None, search2=None, search3=None, format=None):
+        search_list = [search, search1, search2, search3]
+        final_obj = []
+        for searches in search_list:
+            if searches is not None:
+                user_list = User.objects.filter(Q(first_name__icontains=searches) | Q(last_name__icontains=searches))
+                obj = DoctorProfile.objects.filter(Q(user__in=user_list) | Q(location__icontains=searches) | Q(hospital__icontains=searches) | Q(specialization__icontains=searches))
+                obj.order_by("location", "experience")
+                final_obj.extend(obj)
+        serializer = DoctorSerializer(final_obj, many = True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 

@@ -99,7 +99,7 @@ class DoctorProfile(models.Model):
             ("In-Person", "In-Person"),
     )
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="doctor_profile")
-    photo = models.ImageField(upload_to="doctor/")
+    photo = models.ImageField(upload_to="doctor/", blank =True, null= True)
     hospital = models.CharField(max_length=55)
     specialization = models.CharField(max_length=18, choices=SPECIALIZATION_TYPE)
     availabilty_type = models.CharField(max_length=15, choices=AVAILABILITY_TYPE, default="Telemedicine")
@@ -127,22 +127,12 @@ class BookDoctor(models.Model):
 
     def __str__(self):
         return "patient is {} - doctor is {}".format(self.patient.first_name,self.doctor.first_name)
-  
-
-class SearchAttribute(models.Model):
-    name = models.CharField(max_length=25)
-
-    def __str__(self):
-        return self.name
-
-class SearchAttributeValue(models.Model):
-    attribute = models.ForeignKey(SearchAttribute, related_name="search_attribute", on_delete= models.CASCADE)
-    value = models.CharField(max_length=15)
 
 
 class ConformBooking(models.Model):
     book = models.ForeignKey(BookDoctor, related_name="conform_booking", on_delete=models.CASCADE)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
+    date_time = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return "{}".format(self.id)
