@@ -25,7 +25,6 @@ class User(AbstractBaseUser):
     is_active = models.BooleanField(default=False)
     is_admin = models.BooleanField(default=False)
 
-
     objects = UserManager()
 
     USERNAME_FIELD = 'email'
@@ -108,7 +107,6 @@ class DoctorProfile(models.Model):
     language = models.CharField(max_length=1, choices=LANGUAGE)
     location = models.CharField(max_length=50)
     
-
     def __str__(self):
         return self.user.first_name 
     
@@ -118,9 +116,14 @@ class BookDoctor(models.Model):
         ("Emergency", "Emergency"),
         ("Regular", "Regular"),
     )
+    AVAILABILITY_TYPE = (
+            ("Telemedicine", "Telemedicine"),
+            ("In-Person", "In-Person"),
+    )
     patient = models.ForeignKey(User, on_delete=models.CASCADE, related_name="booking_patient")
     doctor = models.ForeignKey(User, related_name="booking_doctor", on_delete=models.CASCADE)
     doctor_is_preferred = models.BooleanField(default=False)
+    availabilty_type = models.CharField(max_length=15, choices=AVAILABILITY_TYPE, default="Telemedicine")
     person_consultation_type = models.CharField(max_length=10, choices=CONSULTATION_TPYE)
     emergency_details = models.TextField(blank=True, null=True)
     ambulance = models.BooleanField(default=False)
