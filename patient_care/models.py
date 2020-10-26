@@ -86,7 +86,7 @@ class DoctorProfile(models.Model):
     SPECIALIZATION_TYPE = (
             ("Cardiologist" , "Cardiologist"),
             ("Endocrinologists", "Endocrinologists"),
-            ("Nephrologists" ,"Nephrologists"), 
+            ("GUN" ,"Nephrologists"), 
         )
     LANGUAGE = (
             ("E", "English"),
@@ -111,7 +111,7 @@ class DoctorProfile(models.Model):
         return self.user.first_name 
     
 
-class BookDoctor(models.Model):
+class Appointment(models.Model):
     CONSULTATION_TPYE = (
         ("Emergency", "Emergency"),
         ("Regular", "Regular"),
@@ -122,22 +122,21 @@ class BookDoctor(models.Model):
     )
     patient = models.ForeignKey(User, on_delete=models.CASCADE, related_name="booking_patient")
     doctor = models.ForeignKey(User, related_name="booking_doctor", on_delete=models.CASCADE)
-    doctor_is_preferred = models.BooleanField(default=False)
     availabilty_type = models.CharField(max_length=15, choices=AVAILABILITY_TYPE, default="Telemedicine")
     person_consultation_type = models.CharField(max_length=10, choices=CONSULTATION_TPYE)
     emergency_details = models.TextField(blank=True, null=True)
     ambulance = models.BooleanField(default=False)
-
-    def __str__(self):
-        return "patient is {} - doctor is {}".format(self.patient.first_name,self.doctor.first_name)
-
-
-class ConfirmBooking(models.Model):
-    book = models.ForeignKey(BookDoctor, related_name="conform_booking", on_delete=models.CASCADE)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     date_time = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return "{}".format(self.id)
+        return "patient is {} - doctor is {}".format(self.patient.first_name, self.doctor.first_name)
+        
+class PreferredDoctor(models.Model):
+    patient = models.ForeignKey(User, on_delete=models.CASCADE, related_name="patient_user")
+    doctor = models.ForeignKey(User, on_delete=models.CASCADE, related_name="doctor_user")
+    doctor_is_preferred = models.BooleanField(default=False)
+
+
     
 

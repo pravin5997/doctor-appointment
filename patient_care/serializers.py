@@ -1,4 +1,4 @@
-from .models import User, PatientProfile, DoctorProfile, BookDoctor, ConfirmBooking
+from .models import User, PatientProfile, DoctorProfile, Appointment
 from rest_framework import serializers
 from rest_framework.fields import CurrentUserDefault
 
@@ -34,7 +34,7 @@ class PatientProfileSerializer(serializers.ModelSerializer):
         exclude = ("user",)
 
 
-class DoctorSerializer(serializers.ModelSerializer):
+class DoctorProfileSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(source="user.first_name")
     last_name = serializers.CharField(source="user.last_name")
     mobile = serializers.CharField(source="user.mobile")
@@ -44,12 +44,7 @@ class DoctorSerializer(serializers.ModelSerializer):
         exclude = ("user",)
         
 
-class DoctorBookSerializer(serializers.ModelSerializer):
+class DoctorAppointmentSerializer(serializers.ModelSerializer):
     class Meta:
-        model = BookDoctor
-        fields = "__all__"
-
-class ConformBookingSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ConfirmBooking
+        model = Appointment
         fields = "__all__"

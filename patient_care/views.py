@@ -3,9 +3,9 @@ from django.http import HttpResponse, JsonResponse
 from rest_framework.response import Response
 from rest_framework.generics import ListCreateAPIView,RetrieveUpdateDestroyAPIView, CreateAPIView, RetrieveAPIView, ListAPIView
 from rest_framework.views import APIView
-from .serializers import UserSerializer, PatientProfileSerializer, DoctorSerializer, DoctorBookSerializer, LoginSerializer, ConformBookingSerializer
+from .serializers import UserSerializer, PatientProfileSerializer, DoctorProfileSerializer, DoctorAppointmentSerializer, LoginSerializer
 from rest_framework import status, viewsets
-from .models import User,PatientProfile, DoctorProfile, BookDoctor, ConfirmBooking
+from .models import User,PatientProfile, DoctorProfile, Appointment
 from django.contrib.auth import authenticate, login
 from django.db.models import Q
 from django.core.mail import EmailMessage, send_mail
@@ -96,7 +96,7 @@ class PatientProfileView(viewsets.ModelViewSet):
 
 class DoctorProfileView(viewsets.ModelViewSet):
     queryset = DoctorProfile.objects.all()
-    serializer_class = DoctorSerializer
+    serializer_class = DoctorProfileSerializer
    
     def create(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data)
@@ -108,24 +108,23 @@ class DoctorProfileView(viewsets.ModelViewSet):
 
 class SearchDoctor(APIView):
 
-    def get(self, request, search, search1=None, search2=None, search3=None, format=None):
-        search_list = [search, search1, search2, search3]
-        final_obj = []
-        for searches in search_list:
-            if searches is not None:
-                user_list = User.objects.filter(Q(first_name__icontains=searches) | Q(last_name__icontains=searches))
-                obj = DoctorProfile.objects.filter(Q(user__in=user_list) | Q(location__icontains=searches) | Q(hospital__icontains=searches) | Q(specialization__icontains=searches))
-                obj.order_by("location", "experience")
-                final_obj.extend(obj)
-        serializer = DoctorSerializer(final_obj, many = True)
+    def get(self, request, format=None):
+        user_list = []
+        search = request.GET.get("search", None)
+        sort_by = request.GET.get("sort_by", None)
+        if search == "1":
+            user_list = list(Appointment.objects.filter(patient=request.user).values_list("doctor_id", flat=True).order_by("date_time"))
+        else:
+            user_list = list(User.objects.filter(Q(first_name__icontains=search) | Q(last_name__icontains=search)).values_list("id", flat=True))
+        obj = DoctorProfile.objects.filter(Q(user_id__in=user_list) | Q(location__icontains=search) | Q(hospital__icontains=search) | Q(specialization__icontains=search))
+        if sort_by:
+            sort_obj = obj.order_by(sort_by)
+        else:
+            sort_obj = obj
+        serializer = DoctorProfileSerializer(sort_obj, many = True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class DoctorBook(ListCreateAPIView):
-    queryset = BookDoctor.objects.all()
-    serializer_class = DoctorBookSerializer
-
-
-class ConformBookingDoctor(ListCreateAPIView):
-    queryset = ConfirmBooking.objects.all()
-    serializer_class = ConformBookingSerializer
+class DoctorAppointment(ListCreateAPIView):
+    queryset = Appointment.objects.all()
+    serializer_class = DoctorAppointmentSerializer
